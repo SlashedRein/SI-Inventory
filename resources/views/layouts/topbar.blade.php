@@ -1,6 +1,9 @@
 <div class="topbar">
     <div class="d-flex align-items-center">
-        <button class="btn btn-light d-lg-none me-3" id="btnMobileToggle">
+        <!-- <button class="btn btn-light d-lg-none me-3" id="btnMobileToggle">
+            <i class="bi bi-list fs-4"></i>
+        </button> -->
+        <button id="btnToggle" class="btn btn-light me-3">
             <i class="bi bi-list fs-4"></i>
         </button>
         <h5 class="mb-0 fw-bold text-brown">
