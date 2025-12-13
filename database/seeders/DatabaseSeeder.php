@@ -15,16 +15,19 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Bikin Akun Login (Owner & Kasir)
+        // 1. Bikin Akun Owner
         User::create([
             'name' => 'Dewi',
+            'username' => 'Dewi', // Username login
             'email' => 'owner@toko.com',
             'password' => Hash::make('nastar123'),
             'role' => 'owner',
         ]);
 
+        // 2. Bikin Akun Kasir
         User::create([
             'name' => 'Karyawan',
+            'username' => 'Karyawan', // Username login
             'email' => 'kasir@toko.com',
             'password' => Hash::make('12345678'),
             'role' => 'kasir',
