@@ -1,5 +1,7 @@
 <?php
 namespace App\Http\Controllers;
+use App\Imports\PenjualanImport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Penjualan;
 use App\Models\DetailPenjualan;
 use App\Models\Produk;
@@ -65,5 +67,146 @@ class PenjualanController extends Controller {
     public function show($id){
         $penjualan = Penjualan::with(['detail.produk', 'customer'])->findOrFail($id);
         return view('penjualan.show', compact('penjualan'));
+    }
+    
+    public function import(Request $request)
+    {
+        // 1. Validasi File
+        $request->validate([
+            'file_excel' => 'required|file'
+        ]);
+
+        $file = $request->file('file_excel');
+        $path = $file->getRealPath();
+
+        // 2. Deteksi Separator Otomatis
+        $handle = fopen($path, "r");
+        $firstLine = fgets($handle);
+        fclose($handle);
+        $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
+
+        // 3. Baca Data CSV
+        $data = [];
+        $rowNumber = 0;
+        
+        if (($handle = fopen($path, "r")) !== false) {
+            while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
+                $rowNumber++;
+                
+                // SKIP jika baris kosong atau jumlah kolom kurang dari 5
+                if(count($row) < 5) continue; 
+
+                // SKIP BARIS JUDUL (Kalau kolom pertama isinya "no_transaksi")
+                if ($rowNumber == 1 && strtolower(trim($row[0])) == 'no_transaksi') {
+                    continue;
+                }
+
+                // Masukkan ke array
+                $data[] = [
+                    'no_transaksi' => trim($row[0]),
+                    'tanggal'      => trim($row[1]),
+                    'customer'     => trim($row[2]),
+                    'nama_produk'  => trim($row[3]),
+                    'qty'          => (int) trim($row[4]),
+                ];
+            }
+            fclose($handle);
+        }
+
+        if (empty($data)) {
+            return back()->with('error', 'File CSV kosong atau format header salah!');
+        }
+
+        // 4. Proses Insert ke Database
+        DB::beginTransaction();
+        try {
+            $groups = collect($data)->groupBy('no_transaksi');
+            $suksesCount = 0;
+            $errorLog = [];
+
+            foreach ($groups as $no_transaksi => $items) {
+                $firstRow = $items->first();
+                
+                // Buat Customer (Default 'Umum' kalau kosong)
+                $namaCust = $firstRow['customer'] ?: 'Umum';
+                $customer = Customer::firstOrCreate(
+                    ['nama_customer' => $namaCust],
+                    ['alamat' => '-', 'no_telp' => '-']
+                );
+
+                // Parsing Tanggal
+                try {
+                    $tgl = \Carbon\Carbon::parse($firstRow['tanggal']);
+                } catch (\Exception $e) {
+                    $tgl = now();
+                }
+
+                // Cek Produk
+                $grandTotal = 0;
+                $details = [];
+
+                foreach ($items as $item) {
+                    // Cari produk MIRIP (Case Insensitive)
+                    $produk = Produk::where('nama_produk', 'LIKE', '%' . $item['nama_produk'] . '%')->first();
+
+                    if ($produk) {
+                        $subtotal = $produk->harga_jual * $item['qty'];
+                        $grandTotal += $subtotal;
+                        
+                        $details[] = [
+                            'produk' => $produk,
+                            'qty' => $item['qty'],
+                            'subtotal' => $subtotal
+                        ];
+                    } else {
+                        // Catat error kalau produk gak ketemu
+                        $errorLog[] = "Produk '" . $item['nama_produk'] . "' tidak ditemukan di database.";
+                    }
+                }
+
+                if ($grandTotal == 0) continue; // Skip struk kalau isinya kosong
+
+                // Simpan Header Penjualan
+                $penjualan = Penjualan::create([
+                    'no_transaksi' => $no_transaksi,
+                    'tgl_penjualan' => $tgl,
+                    'total' => $grandTotal,
+                    'bayar' => $grandTotal,
+                    'kembali' => 0,
+                    'id_user' => Auth::id() ?? 1,
+                    'id_customer' => $customer->id_customer,
+                ]);
+
+                // Simpan Detail & Potong Stok
+                foreach ($details as $d) {
+                    DetailPenjualan::create([
+                        'id_penjualan' => $penjualan->id_penjualan,
+                        'id_produk' => $d['produk']->id_produk,
+                        'jumlah' => $d['qty'],
+                        'subtotal' => $d['subtotal']
+                    ]);
+                    
+                    $d['produk']->decrement('stok', $d['qty']);
+                }
+                $suksesCount++;
+            }
+
+            DB::commit();
+
+            // Cek apakah ada error produk
+            if (count($errorLog) > 0) {
+                // Tampilkan sukses TAPI ada catatan
+                $pesanError = implode(" | ", array_unique($errorLog));
+                return redirect()->route('penjualan.index')
+                    ->with('success', "$suksesCount Transaksi berhasil! TAPI ada produk skip: $pesanError");
+            }
+
+            return redirect()->route('penjualan.index')
+                ->with('success', "Sukses! $suksesCount Transaksi berhasil diimport.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error Database: ' . $e->getMessage());
+        }
     }
 }

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Bahan Baku')
-@section('title_page', 'Inventory Bahan Baku')
+@section('title', 'Produk Jadi')
+@section('title_page', 'Katalog Produk')
 
 @section('content')
 <style>
@@ -39,33 +39,38 @@
     <div class="col-md-4">
         <div class="card-custom p-3 d-flex align-items-center gap-3">
             <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
-                <i class="bi bi-box-seam fs-4"></i>
+                <i class="bi bi-cake2 fs-4"></i>
             </div>
             <div>
-                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Total Item</h6>
-                <h4 class="fw-bold mb-0">{{ $bahans->count() }} Jenis</h4>
+                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Total Varian</h6>
+                <h4 class="fw-bold mb-0">{{ $produks->count() }} Jenis</h4>
             </div>
         </div>
     </div>
+
     <div class="col-md-4">
         <div class="card-custom p-3 d-flex align-items-center gap-3">
             <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-circle">
-                <i class="bi bi-exclamation-triangle fs-4"></i>
+                <i class="bi bi-bell fs-4"></i>
             </div>
             <div>
-                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Stok Menipis</h6>
-                <h4 class="fw-bold mb-0">{{ $bahans->where('stok', '<=', 'stok_min')->count() }} Item</h4>
+                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Perlu Produksi</h6>
+                <h4 class="fw-bold mb-0">{{ $produks->where('stok', '<=', 5)->count() }} Item</h4>
             </div>
         </div>
     </div>
+
     <div class="col-md-4">
         <div class="card-custom p-3 d-flex align-items-center gap-3">
-            <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle">
-                <i class="bi bi-check2-circle fs-4"></i>
+            <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
+                <i class="bi bi-cash-stack fs-4"></i>
             </div>
             <div>
-                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Status Gudang</h6>
-                <h4 class="fw-bold mb-0">Aktif</h4>
+                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Nilai Aset Produk</h6>
+                @php
+                    $totalAset = $produks->sum(function($p){ return $p->harga_jual * $p->stok; });
+                @endphp
+                <h4 class="fw-bold mb-0">Rp {{ number_format($totalAset, 0, ',', '.') }}</h4>
             </div>
         </div>
     </div>
@@ -74,61 +79,65 @@
 <div class="card-custom p-4 fade-in-up" style="animation-delay: 0.2s;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h5 class="fw-bold mb-1">Daftar Bahan Baku</h5>
-            <p class="text-muted small mb-0">Manage stok bahan mentah untuk produksi.</p>
+            <h5 class="fw-bold mb-1">Daftar Produk Jadi</h5>
+            <p class="text-muted small mb-0">Kelola harga dan stok kue siap jual.</p>
         </div>
         
         <div class="d-flex gap-2">
             <div class="input-group">
                 <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" id="searchInput" class="form-control bg-light border-start-0 rounded-end-3" placeholder="Cari bahan...">
+                <input type="text" id="searchInput" class="form-control bg-light border-start-0 rounded-end-3" placeholder="Cari kue...">
             </div>
 
             @if(Auth::user()->role == 'owner')
             <button class="btn btn-primary d-flex align-items-center gap-2 rounded-3 shadow-sm px-4" 
                     data-bs-toggle="modal" data-bs-target="#modalCreate">
                 <i class="bi bi-plus-lg"></i>
-                <span class="d-none d-md-inline">Baru</span>
+                <span class="d-none d-md-inline">Produk Baru</span>
             </button>
             @endif
         </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle" id="tableBahan">
+        <table class="table table-hover align-middle" id="tableProduk">
             <thead class="bg-light">
                 <tr>
-                    <th class="py-3 ps-3 rounded-start-3 text-secondary text-uppercase small fw-bold">Nama Bahan</th>
-                    <th class="py-3 text-secondary text-uppercase small fw-bold">Stok Fisik</th>
+                    <th class="py-3 ps-3 rounded-start-3 text-secondary text-uppercase small fw-bold">Nama Produk</th>
+                    <th class="py-3 text-secondary text-uppercase small fw-bold">Harga Jual</th>
+                    <th class="py-3 text-secondary text-uppercase small fw-bold text-center">Stok</th>
                     <th class="py-3 text-secondary text-uppercase small fw-bold">Satuan</th>
-                    <th class="py-3 text-secondary text-uppercase small fw-bold text-center">Min. Alert</th>
                     <th class="py-3 pe-3 rounded-end-3 text-end text-secondary text-uppercase small fw-bold">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($bahans as $item)
+                @forelse($produks as $item)
                 <tr class="border-bottom-0">
-                    <td class="ps-3 fw-bold text-dark">{{ $item->nama_bahan }}</td>
-                    <td>
+                    <td class="ps-3 fw-bold text-dark">{{ $item->nama_produk }}</td>
+                    <td class="text-success fw-bold">Rp {{ number_format($item->harga_jual, 0, ',', '.') }}</td>
+                    <td class="text-center">
                         @if($item->stok <= 0)
                             <span class="badge-stock badge-danger"><i class="bi bi-x-circle me-1"></i> Habis</span>
-                        @elseif($item->stok <= $item->stok_min)
-                            <span class="badge-stock badge-warning"><i class="bi bi-exclamation-circle me-1"></i> {{ $item->stok }} (Low)</span>
+                        @elseif($item->stok <= 5)
+                            <span class="badge-stock badge-warning"><i class="bi bi-exclamation-circle me-1"></i> {{ $item->stok }} (Sisa Dikit)</span>
                         @else
                             <span class="badge-stock badge-safe">{{ $item->stok }}</span>
                         @endif
                     </td>
                     <td class="text-muted">{{ $item->satuan }}</td>
-                    <td class="text-center text-muted">{{ $item->stok_min }}</td>
                     <td class="text-end pe-3">
                         <div class="d-flex justify-content-end gap-2">
                             <button class="btn btn-sm btn-light text-primary border rounded-2" 
-                                    onclick="editItem({{ $item }})" title="Edit Stok/Info">
+                                    onclick="editItem({{ $item }})" title="Edit Harga/Stok">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
+                            
+                            <a href="{{ route('resep.edit', $item->id_produk) }}" class="btn btn-sm btn-light text-info border rounded-2" title="Atur Resep">
+                                <i class="bi bi-journal-text"></i>
+                            </a>
 
                             @if(Auth::user()->role == 'owner')
-                            <form action="{{ route('bahan-baku.destroy', $item->id_bahan) }}" method="POST" class="d-inline delete-form">
+                            <form action="{{ route('produk.destroy', $item->id_produk) }}" method="POST" class="d-inline delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-light text-danger border rounded-2" title="Hapus">
@@ -142,8 +151,8 @@
                 @empty
                 <tr>
                     <td colspan="5" class="text-center py-5 text-muted">
-                        <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary opacity-25"></i>
-                        <p class="mt-2 mb-0">Belum ada data bahan baku.</p>
+                        <i class="bi bi-cake2 fs-1 d-block mb-2 text-secondary opacity-25"></i>
+                        <p class="mt-2 mb-0">Belum ada produk kue.</p>
                     </td>
                 </tr>
                 @endforelse
@@ -156,48 +165,45 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-primary">Tambah Bahan Baru</h5>
+                <h5 class="modal-title fw-bold text-primary">Tambah Produk Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('bahan-baku.store') }}" method="POST">
+            <form action="{{ route('produk.store') }}" method="POST">
                 @csrf
                 <div class="modal-body pt-4">
                     <div class="form-floating mb-3">
-                        <input type="text" name="nama_bahan" class="form-control rounded-3" id="addName" placeholder="Nama" required>
-                        <label for="addName">Nama Bahan (Contoh: Tepung Segitiga)</label>
+                        <input type="text" name="nama_produk" class="form-control rounded-3" id="addName" placeholder="Nama" required>
+                        <label for="addName">Nama Kue (Misal: Nastar Premium)</label>
                     </div>
                     
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <select name="satuan" class="form-select rounded-3" id="addSatuan">
-                                    <option value="gram">Gram (gr)</option>
-                                    <option value="kg">Kilogram (kg)</option>
-                                    <option value="ml">Milliliter (ml)</option>
-                                    <option value="liter">Liter (L)</option>
-                                    <option value="pcs">Pcs / Butir</option>
-                                    <option value="batang">Batang</option>
-                                    <option value="bungkus">Bungkus</option>
-                                </select>
-                                <label for="addSatuan">Satuan</label>
+                                <input type="number" name="harga_jual" class="form-control rounded-3" id="addHarga" placeholder="0" required>
+                                <label for="addHarga">Harga Jual (Rp)</label>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input type="number" name="stok" class="form-control rounded-3" id="addStok" placeholder="0" value="0">
+                                <input type="number" name="stok" class="form-control rounded-3" id="addStok" placeholder="0" value="0" required>
                                 <label for="addStok">Stok Awal</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-floating mt-3">
-                        <input type="number" name="stok_min" class="form-control rounded-3" id="addMin" placeholder="10" value="10">
-                        <label for="addMin">Batas Minimum (Alert Stok Menipis)</label>
+                        <select name="satuan" class="form-select rounded-3" id="addSatuan">
+                            <option value="Toples">Toples</option>
+                            <option value="Box">Box</option>
+                            <option value="Pcs">Pcs</option>
+                            <option value="Paket">Paket</option>
+                        </select>
+                        <label for="addSatuan">Satuan Penjualan</label>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 pe-4">
                     <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">Simpan Data</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">Simpan Produk</button>
                 </div>
             </form>
         </div>
@@ -208,7 +214,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-primary">Edit / Update Stok</h5>
+                <h5 class="modal-title fw-bold text-primary">Edit Produk</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formEdit" method="POST">
@@ -216,50 +222,41 @@
                 @method('PUT')
                 <div class="modal-body pt-4">
                     <div class="mb-3">
-                        <label class="form-label small text-muted text-uppercase fw-bold">Nama Bahan</label>
-                        <input type="text" name="nama_bahan" id="edit_nama" class="form-control rounded-3 py-2" 
-                               {{ Auth::user()->role == 'kasir' ? 'readonly style=background-color:#f8f9fa;' : 'required' }}>
-                        @if(Auth::user()->role == 'kasir')
-                            <small class="text-muted" style="font-size: 10px;">*Hanya Owner yang dapat mengubah nama</small>
-                        @endif
+                        <label class="form-label small text-muted text-uppercase fw-bold">Nama Produk</label>
+                        <input type="text" name="nama_produk" id="edit_nama" class="form-control rounded-3 py-2" required>
                     </div>
                     
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Satuan</label>
-                            @if(Auth::user()->role == 'owner')
-                                <select name="satuan" id="edit_satuan" class="form-select rounded-3 py-2">
-                                    <option value="gram">Gram</option>
-                                    <option value="kg">Kg</option>
-                                    <option value="ml">Ml</option>
-                                    <option value="liter">Liter</option>
-                                    <option value="pcs">Pcs</option>
-                                    <option value="batang">Batang</option>
-                                    <option value="bungkus">Bungkus</option>
-                                </select>
-                            @else
-                                <input type="text" name="satuan" id="edit_satuan_text" class="form-control rounded-3 py-2" readonly style="background-color:#f8f9fa;">
-                            @endif
+                            <label class="form-label small text-muted text-uppercase fw-bold">Harga Jual</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">Rp</span>
+                                <input type="number" name="harga_jual" id="edit_harga" class="form-control rounded-end-3 py-2" required>
+                            </div>
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label small text-uppercase fw-bold text-primary">Stok Fisik (Opname)</label>
+                            <label class="form-label small text-uppercase fw-bold text-primary">Stok Fisik</label>
                             <div class="input-group">
-                                <input type="number" name="stok" id="edit_stok" class="form-control rounded-3 border-primary" required>
-                                <span class="input-group-text bg-primary text-white border-primary rounded-end-3"><i class="bi bi-pencil"></i></span>
+                                <input type="number" name="stok" id="edit_stok" class="form-control rounded-start-3 border-primary" required>
+                                <span class="input-group-text bg-primary text-white border-primary"><i class="bi bi-pencil"></i></span>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-3">
-                        <label class="form-label small text-muted text-uppercase fw-bold">Alert Minimum</label>
-                        <input type="number" name="stok_min" id="edit_min" class="form-control rounded-3 py-2" 
-                               {{ Auth::user()->role == 'kasir' ? 'readonly style=background-color:#f8f9fa;' : 'required' }}>
+                        <label class="form-label small text-muted text-uppercase fw-bold">Satuan</label>
+                        <select name="satuan" id="edit_satuan" class="form-select rounded-3 py-2">
+                            <option value="Toples">Toples</option>
+                            <option value="Box">Box</option>
+                            <option value="Pcs">Pcs</option>
+                            <option value="Paket">Paket</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 pe-4">
                     <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">Simpan Perubahan</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">Update Data</button>
                 </div>
             </form>
         </div>
@@ -268,10 +265,10 @@
 
 @push('scripts')
 <script>
-    // Fitur Search Sederhana
+    // Fitur Search Table
     document.getElementById('searchInput').addEventListener('keyup', function() {
         let searchText = this.value.toLowerCase();
-        let tableRows = document.querySelectorAll('#tableBahan tbody tr');
+        let tableRows = document.querySelectorAll('#tableProduk tbody tr');
         
         tableRows.forEach(row => {
             let text = row.innerText.toLowerCase();
@@ -279,31 +276,28 @@
         });
     });
 
-    // Fitur Populate Modal Edit
+    // Fitur Edit Modal Populate
     function editItem(data) {
-        document.getElementById('formEdit').action = "{{ route('bahan-baku.index') }}/" + data.id_bahan;
-        document.getElementById('edit_nama').value = data.nama_bahan;
+        // 1. Set URL Form Action
+        document.getElementById('formEdit').action = "{{ route('produk.index') }}/" + data.id_produk;
+        
+        // 2. Isi Value ke Input
+        document.getElementById('edit_nama').value = data.nama_produk;
+        document.getElementById('edit_harga').value = data.harga_jual; // Pastikan format angka polos
         document.getElementById('edit_stok').value = data.stok;
-        document.getElementById('edit_min').value = data.stok_min;
+        document.getElementById('edit_satuan').value = data.satuan;
 
-        const role = "{{ Auth::user()->role }}";
-        if(role === 'owner') {
-            document.getElementById('edit_satuan').value = data.satuan;
-        } else {
-            document.getElementById('edit_satuan_text').value = data.satuan;
-        }
-
+        // 3. Show Modal
         new bootstrap.Modal(document.getElementById('modalEdit')).show();
     }
 
-    // --- FITUR SWEETALERT 2 ---
+    // SweetAlert untuk Delete
     document.querySelectorAll('.delete-form').forEach(form => {
         form.addEventListener('submit', function(e) {
-            e.preventDefault(); // Cegah submit langsung
-            
+            e.preventDefault();
             Swal.fire({
-                title: 'Hapus Bahan Baku?',
-                text: "Data stok akan hilang dan tidak bisa dikembalikan!",
+                title: 'Hapus Produk?',
+                text: "Data yang dihapus tidak bisa dikembalikan!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -312,7 +306,7 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    this.submit(); // Lanjutkan submit jika user klik Ya
+                    this.submit();
                 }
             });
         });

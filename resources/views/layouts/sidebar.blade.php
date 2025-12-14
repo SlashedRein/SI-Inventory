@@ -21,7 +21,7 @@
             </a>
             <a href="{{ route('produk.index') }}" class="nav-link {{ request()->routeIs('produk.*') ? 'active' : '' }}" title="Produk Jadi">
                 <i class="bi bi-cake2-fill"></i>
-                <span>Produk Jadi</span>
+                <span>Produk</span>
             </a>
             <a href="{{ route('supplier.index') }}" class="nav-link {{ request()->routeIs('supplier.*') ? 'active' : '' }}" title="Supplier">
                 <i class="bi bi-truck"></i>

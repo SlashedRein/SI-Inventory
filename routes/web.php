@@ -52,7 +52,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/penjualan/import', [App\Http\Controllers\PenjualanController::class, 'import'])->name('penjualan.import');
 });
+
 
 // Baris ini PENTING untuk login!
 require __DIR__.'/auth.php';
+
+Route::get('/cek-php', function() {
+    phpinfo();
+});
