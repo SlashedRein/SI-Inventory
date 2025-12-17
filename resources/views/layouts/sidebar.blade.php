@@ -33,7 +33,7 @@
         <div class="px-3">
             <a href="{{ route('penjualan.index') }}" class="nav-link {{ request()->routeIs('penjualan.*') ? 'active' : '' }}" title="Kasir">
                 <i class="bi bi-receipt"></i>
-                <span>Kasir (POS)</span>
+                <span>Penjualan </span>
             </a>
             <a href="{{ route('pembelian.index') }}" class="nav-link {{ request()->routeIs('pembelian.*') ? 'active' : '' }}" title="Restock">
                 <i class="bi bi-cart-plus-fill"></i>
@@ -50,7 +50,7 @@
         <div class="px-3">
             <a href="{{ route('laporan.index') }}" class="nav-link {{ request()->routeIs('laporan.*') ? 'active' : '' }}" title="Keuangan">
                 <i class="bi bi-pie-chart-fill"></i>
-                <span>Keuangan</span>
+                <span>Laporan</span>
             </a>
         </div>
         @endif

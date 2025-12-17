@@ -63,54 +63,65 @@
 @section('content')
 
 <div class="row g-4 mb-4">
+    {{-- Total Penjualan --}}
     <div class="col-md-3">
-        <div class="card card-custom p-4 card-animate delay-1">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <p class="text-muted mb-1">Total Penjualan</p>
-                    <h4 class="fw-bold">Rp 12.500.000</h4>
+        <a href="{{ route('laporan.index') }}" class="text-decoration-none">
+            <div class="card card-custom p-4 card-animate delay-1 h-100" style="cursor: pointer;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Total Penjualan</p>
+                        <h4 class="fw-bold text-dark">{{ 'Rp ' . number_format($total_penjualan, 0, ',', '.') }}</h4>
+                    </div>
+                    <i class="bi bi-cash-coin fs-2 text-success"></i>
                 </div>
-                <i class="bi bi-cash-coin fs-2 text-success"></i>
             </div>
-        </div>
+        </a>
     </div>
 
-<div class="col-md-3">
-    <div class="card card-custom p-4 card-animate delay-2">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <p class="text-muted mb-1">Produk</p>
-                <h4 class="fw-bold">48 Item</h4>
+    {{-- Produk --}}
+    <div class="col-md-3">
+        <a href="{{ route('produk.index') }}" class="text-decoration-none">
+            <div class="card card-custom p-4 card-animate delay-2 h-100" style="cursor: pointer;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Produk</p>
+                        <h4 class="fw-bold text-dark">{{ $total_produk }} Item</h4>
+                    </div>
+                    <i class="bi bi-cake2-fill fs-2 text-warning"></i>
+                </div>
             </div>
-            <i class="bi bi-cake2-fill fs-2 text-warning"></i>
-        </div>
+        </a>
     </div>
-</div>
 
-<div class="col-md-3">
-    <div class="card card-custom p-4 card-animate delay-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <p class="text-muted mb-1">Customer</p>
-                <h4 class="fw-bold">132</h4>
+    {{-- Customer --}}
+    <div class="col-md-3">
+        <a href="{{ route('customer.index') }}" class="text-decoration-none">
+            <div class="card card-custom p-4 card-animate delay-3 h-100" style="cursor: pointer;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Customer</p>
+                        <h4 class="fw-bold text-dark">{{ $total_customer }}</h4>
+                    </div>
+                    <i class="bi bi-people-fill fs-2 text-primary"></i>
+                </div>
             </div>
-            <i class="bi bi-people-fill fs-2 text-primary"></i>
-        </div>
+        </a>
     </div>
-</div>
 
-<div class="col-md-3">
-    <div class="card card-custom p-4 card-animate delay-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <p class="text-muted mb-1">Stok Menipis</p>
-                <h4 class="fw-bold">5 Item</h4>
+    {{-- Stok Menipis --}}
+    <div class="col-md-3">
+        <a href="{{ route('produk.stok-minim') }}" class="text-decoration-none">
+            <div class="card card-custom p-4 card-animate delay-4 h-100" style="cursor: pointer;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Stok Menipis</p>
+                        <h4 class="fw-bold text-dark">{{ $stok_minim_count }} Item</h4>
+                    </div>
+                    <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
+                </div>
             </div>
-            <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
-        </div>
+        </a>
     </div>
-</div>
-
 
 </div>
 

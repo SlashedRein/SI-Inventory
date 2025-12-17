@@ -15,11 +15,12 @@
 
     <style>
         :root {
-            --primary: #E07A5F;       /* Terracotta */
-            --primary-hover: #D06348;
-            --secondary: #264653;     /* Deep Slate */
-            --bg-light: #FDFBF7;      /* Cream */
-            
+            /* Slightly brighter primary to improve visibility while keeping terracotta theme */
+            --primary: #FF7A59;       /* Brighter Terracotta */
+            --primary-hover: #E85A3B; /* Hover / active tone */
+            --secondary: #233b4a;     /* Deep Slate, a bit richer for contrast */
+            --bg-light: #FBFBFB;      /* Very light background */
+
             --sidebar-width: 260px;
             --sidebar-collapsed-width: 80px;
             --header-height: 70px;
@@ -53,7 +54,7 @@
         }
         .nav-link:hover, .nav-link.active {
             background-color: var(--primary); color: #fff;
-            box-shadow: 0 4px 15px rgba(224, 122, 95, 0.4);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.14);
         }
         .nav-title {
             font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;
@@ -118,6 +119,51 @@
         .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+    <style>
+        /* Button improvements to make primary actions more visible */
+        .btn-primary {
+            background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+            border: none; color: #fff; font-weight: 600;
+            box-shadow: 0 8px 20px rgba(37, 35, 36, 0.12);
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            filter: brightness(0.95);
+            box-shadow: 0 10px 28px rgba(37, 35, 36, 0.16);
+        }
+
+        /* Make outline-primary active state filled for clarity */
+        .btn-outline-primary.active, .btn-outline-primary:active, .btn-outline-primary:focus {
+            background-color: var(--primary); color: #fff; border-color: var(--primary);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+
+        /* Badges more vivid */
+        .badge.bg-primary { background-color: var(--primary); }
+        .badge.bg-secondary { background-color: #6c757d; }
+        
+        /* Tipe Pelanggan pills: clearer inactive vs active visual */
+        .nav-pills .nav-link {
+            color: rgba(0,0,0,0.7);
+            background: rgba(35,59,74,0.04);
+            border: 1px solid rgba(35,59,74,0.06);
+            margin: 0 6px; padding: 8px 14px; border-radius: 999px; font-weight: 600;
+            transition: all 0.18s ease-in-out;
+        }
+        .nav-pills .nav-link:hover {
+            background: rgba(35,59,74,0.08);
+            transform: translateY(-1px);
+        }
+        .nav-pills .nav-link.active {
+            background: var(--primary) !important;
+            color: #fff !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 8px 22px rgba(37,35,36,0.12);
+        }
+        /* Make pills full-width on small screens for better tap targets */
+        @media (max-width: 575.98px) {
+            .nav-pills .nav-link { flex: 1 1 auto; text-align: center; margin: 4px 2px; }
+        }
     </style>
 </head>
 <body>

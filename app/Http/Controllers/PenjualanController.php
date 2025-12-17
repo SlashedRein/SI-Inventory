@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PenjualanController extends Controller {
     public function index() {
-        $penjualans = Penjualan::with('customer')->latest()->get();
+        $penjualans = Penjualan::with(['customer', 'detail.produk', 'user'])->latest()->get();
         return view('penjualan.index', compact('penjualans'));
     }
     public function create() {
@@ -22,7 +22,11 @@ class PenjualanController extends Controller {
     }
     public function store(Request $request) {
         $request->validate([
-            'tgl_penjualan' => 'required|date', 'items' => 'required|array'
+            'id_cust' => 'required|exists:customers,id_cust',
+            'tgl_penjualan' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.id_produk' => 'required|exists:produks,id_produk',
+            'items.*.jumlah' => 'required|integer|min:1'
         ]);
         
         try {
@@ -58,15 +62,39 @@ class PenjualanController extends Controller {
                 }
                 $penjualan->update(['total' => $total]);
             });
+            
+            return redirect()->route('penjualan.index')->with('success', 'Penjualan Berhasil Disimpan!');
+            
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Error: ' . $e->getMessage());
         }
-        
-        return redirect()->route('penjualan.index')->with('success', 'Penjualan Berhasil');
     }
     public function show($id){
         $penjualan = Penjualan::with(['detail.produk', 'customer'])->findOrFail($id);
-        return view('penjualan.show', compact('penjualan'));
+        
+        // Deteksi tipe pelanggan: PT/CV = Corporate, lainnya = Personal
+        $isCorporate = preg_match('/(PT|CV|UD|Toko)/i', $penjualan->customer->nama) ? true : false;
+        
+        return view('penjualan.show', compact('penjualan', 'isCorporate'));
+    }
+
+    /**
+     * Print-friendly view for a single penjualan (opens in new tab).
+     */
+    public function print($id)
+    {
+        $penjualan = Penjualan::with(['detail.produk', 'customer', 'user'])->findOrFail($id);
+
+        // If customer looks corporate, show corporate print layout; otherwise show personal print
+        $isCorporate = preg_match('/(PT|CV|UD|Toko)/i', optional($penjualan->customer)->nama ?? '') ? true : false;
+
+        if ($isCorporate) {
+            return view('penjualan.print-corporate', compact('penjualan'));
+        }
+
+        return view('penjualan.print-personal', compact('penjualan'));
     }
     
     public function import(Request $request)
@@ -96,8 +124,8 @@ class PenjualanController extends Controller {
                 // SKIP jika baris kosong atau jumlah kolom kurang dari 5
                 if(count($row) < 5) continue; 
 
-                // SKIP BARIS JUDUL (Kalau kolom pertama isinya "no_transaksi")
-                if ($rowNumber == 1 && strtolower(trim($row[0])) == 'no_transaksi') {
+                // SKIP BARIS JUDUL (Kalau kolom pertama isinya "no_transaksi" atau "tanggal")
+                if ($rowNumber == 1 && (strtolower(trim($row[0])) == 'no_transaksi' || strtolower(trim($row[0])) == 'tanggal')) {
                     continue;
                 }
 
@@ -130,7 +158,7 @@ class PenjualanController extends Controller {
                 // Buat Customer (Default 'Umum' kalau kosong)
                 $namaCust = $firstRow['customer'] ?: 'Umum';
                 $customer = Customer::firstOrCreate(
-                    ['nama_customer' => $namaCust],
+                    ['nama' => $namaCust],
                     ['alamat' => '-', 'no_telp' => '-']
                 );
 
@@ -156,6 +184,7 @@ class PenjualanController extends Controller {
                         $details[] = [
                             'produk' => $produk,
                             'qty' => $item['qty'],
+                            'harga_satuan' => $produk->harga_jual,
                             'subtotal' => $subtotal
                         ];
                     } else {
@@ -166,15 +195,12 @@ class PenjualanController extends Controller {
 
                 if ($grandTotal == 0) continue; // Skip struk kalau isinya kosong
 
-                // Simpan Header Penjualan
+                // Simpan Header Penjualan (sesuai struktur tabel)
                 $penjualan = Penjualan::create([
-                    'no_transaksi' => $no_transaksi,
                     'tgl_penjualan' => $tgl,
                     'total' => $grandTotal,
-                    'bayar' => $grandTotal,
-                    'kembali' => 0,
-                    'id_user' => Auth::id() ?? 1,
-                    'id_customer' => $customer->id_customer,
+                    'user_id' => Auth::id() ?? 1,
+                    'id_cust' => $customer->id_cust,
                 ]);
 
                 // Simpan Detail & Potong Stok
@@ -183,7 +209,8 @@ class PenjualanController extends Controller {
                         'id_penjualan' => $penjualan->id_penjualan,
                         'id_produk' => $d['produk']->id_produk,
                         'jumlah' => $d['qty'],
-                        'subtotal' => $d['subtotal']
+                        'harga_satuan' => $d['harga_satuan'],
+                        'sub_total' => $d['subtotal']
                     ]);
                     
                     $d['produk']->decrement('stok', $d['qty']);

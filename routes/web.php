@@ -11,6 +11,7 @@ use App\Http\Controllers\ResepController;
 use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,9 +23,8 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard'); // <--- INI WAJIB ADA
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])->name('dashboard'); // <--- INI WAJIB ADA
 
 // Grouping Middleware Auth (Harus Login Dulu)
 Route::middleware('auth')->group(function () {
@@ -32,9 +32,13 @@ Route::middleware('auth')->group(function () {
     // === MASTER DATA ===
     // Route::resource otomatis bikin nama: supplier.index, supplier.create, dst.
     Route::resource('supplier', SupplierController::class);
+    Route::post('/supplier/quick-add', [SupplierController::class, 'quick_store'])->name('supplier.quick_store');
     Route::resource('customer', CustomerController::class);
     Route::resource('bahan-baku', BahanBakuController::class);
     Route::resource('produk', ProdukController::class);
+
+    // === STOK MINIM ===
+    Route::get('produk-stok-minim', [ProdukController::class, 'stokMinim'])->name('produk.stok-minim');
 
     // === RESEP (Khusus) ===
     Route::get('produk/{id}/resep', [ResepController::class, 'edit'])->name('resep.edit');
@@ -44,9 +48,21 @@ Route::middleware('auth')->group(function () {
     // === TRANSAKSI ===
     Route::resource('pembelian', PembelianController::class);
     Route::resource('penjualan', PenjualanController::class);
+    // Print/Print-friendly view for a single penjualan (opens in new tab)
+    Route::get('/penjualan/{id}/print', [PenjualanController::class, 'print'])->name('penjualan.print');
+    Route::get('/pembelian/{id}/print', [PembelianController::class, 'print'])->name('pembelian.print');
 
-    // === LAPORAN ===
-    Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    // Halaman Laporan & Filter
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+
+    // Action Download Excel
+    Route::get('/laporan/export', [LaporanController::class, 'exportExcel'])->name('laporan.export');
+
+    // Route Tambah Penjualan
+    Route::get('/transaksi/tambah', [TransaksiController::class, 'create'])->name('transaksi.create');
+    Route::post('/transaksi/simpan', [TransaksiController::class, 'store'])->name('transaksi.store');
+    // Route untuk Quick Add Customer (Ajax)
+    Route::post('/transaksi/customer-quick', [App\Http\Controllers\TransaksiController::class, 'storeCustomerAjax'])->name('customer.quick_store');
 
     // === PROFILE (Bawaan Breeze) ===
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -54,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::post('/penjualan/import', [App\Http\Controllers\PenjualanController::class, 'import'])->name('penjualan.import');
+    Route::post('/pembelian/import', [App\Http\Controllers\PembelianController::class, 'import'])->name('pembelian.import');
 });
 
 

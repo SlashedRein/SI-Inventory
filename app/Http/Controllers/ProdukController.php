@@ -31,4 +31,11 @@ class ProdukController extends Controller {
         Produk::findOrFail($id)->delete();
         return redirect()->route('produk.index')->with('success', 'Produk Dihapus');
     }
+
+    public function stokMinim() {
+        $produks = Produk::where('stok', '<', 10)
+                         ->orderBy('stok', 'asc')
+                         ->get();
+        return view('produk.stok-minim', compact('produks'));
+    }
 }
