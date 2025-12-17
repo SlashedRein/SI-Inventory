@@ -9,4 +9,7 @@ class BahanBaku extends Model
     protected $table = 'bahan_bakus';
     protected $primaryKey = 'id_bahan';
     protected $guarded = [];
+
+    // stok = BASE UNIT
+    // satuan = gram | ml | pcs
 }

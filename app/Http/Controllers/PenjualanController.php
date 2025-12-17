@@ -97,165 +97,178 @@ class PenjualanController extends Controller {
         return view('penjualan.print-personal', compact('penjualan'));
     }
     
-    public function import(Request $request)
-    {
-        // 1. Validasi File
-        $request->validate([
-            'file_excel' => 'required|file'
-        ]);
+   public function import(Request $request)
+{
+    $request->validate([
+        'file_excel' => 'required|file'
+    ]);
 
-        $file = $request->file('file_excel');
-        $ext = strtolower($file->getClientOriginalExtension());
+    $file = $request->file('file_excel');
+    $ext  = strtolower($file->getClientOriginalExtension());
+    $data = [];
 
-        $data = [];
+    /* =======================
+     * 1. BACA FILE
+     * ======================= */
+    if (in_array($ext, ['xls', 'xlsx'])) {
+        $sheets = Excel::toArray([], $file);
+        $rows = $sheets[0] ?? [];
 
-        // Jika file Excel (.xls/.xlsx) -> pakai Maatwebsite Excel toArray
-        if (in_array($ext, ['xls', 'xlsx'])) {
-            $sheets = Excel::toArray([], $file);
-            $rows = count($sheets) > 0 ? $sheets[0] : [];
-            $rowNumber = 0;
-            foreach ($rows as $row) {
-                $rowNumber++;
-                // Pastikan row ada minimal 5 kolom
-                if (!is_array($row) || count($row) < 5) continue;
+        foreach ($rows as $i => $row) {
+            if ($i === 0) continue;
+            if (!is_array($row) || count($row) < 5) continue;
 
-                // Skip header baris (jika berisi teks header umum)
-                $firstCell = strtolower(trim((string)($row[0] ?? '')));
-                if ($rowNumber == 1 && ($firstCell == 'no_transaksi' || $firstCell == 'tanggal')) continue;
+            $data[] = [
+                'no_transaksi' => trim($row[0]),
+                'tanggal'      => trim($row[1]),
+                'customer'     => trim($row[2]),
+                'nama_produk'  => trim($row[3]),
+                'qty'          => (int) $row[4],
+            ];
+        }
+    } else {
+        $path = $file->getRealPath();
+        if (($handle = fopen($path, 'r')) !== false) {
+            $i = 0;
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                $i++;
+                if ($i === 1 || count($row) < 5) continue;
 
                 $data[] = [
-                    'no_transaksi' => trim((string)$row[0]),
-                    'tanggal'      => trim((string)$row[1]),
-                    'customer'     => trim((string)$row[2]),
-                    'nama_produk'  => trim((string)$row[3]),
-                    'qty'          => (int) ($row[4] ?? 0),
+                    'no_transaksi' => trim($row[0]),
+                    'tanggal'      => trim($row[1]),
+                    'customer'     => trim($row[2]),
+                    'nama_produk'  => trim($row[3]),
+                    'qty'          => (int) $row[4],
                 ];
             }
-        } else {
-            // Treat as CSV (detect delimiter robustly)
-            $path = $file->getRealPath();
-            $contents = file_get_contents($path);
-            // detect delimiter by checking common candidates
-            $delimiter = ',';
-            $candidates = [";", ",", "\t", '|'];
-            $firstLine = strtok($contents, "\n");
-            foreach ($candidates as $cand) {
-                if (substr_count($firstLine, $cand) >= 1) { $delimiter = $cand; break; }
-            }
-
-            if (($handle = fopen($path, 'r')) !== false) {
-                $rowNumber = 0;
-                while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
-                    $rowNumber++;
-                    if (count($row) < 5) continue;
-                    $firstCell = strtolower(trim((string)($row[0] ?? '')));
-                    if ($rowNumber == 1 && ($firstCell == 'no_transaksi' || $firstCell == 'tanggal')) continue;
-
-                    $data[] = [
-                        'no_transaksi' => trim($row[0]),
-                        'tanggal'      => trim($row[1]),
-                        'customer'     => trim($row[2]),
-                        'nama_produk'  => trim($row[3]),
-                        'qty'          => (int) trim($row[4]),
-                    ];
-                }
-                fclose($handle);
-            }
-        }
-
-        if (empty($data)) {
-            return back()->with('error', 'File CSV kosong atau format header salah!');
-        }
-
-        // 4. Proses Insert ke Database
-        DB::beginTransaction();
-        try {
-            $groups = collect($data)->groupBy('no_transaksi');
-            $suksesCount = 0;
-            $errorLog = [];
-
-            foreach ($groups as $no_transaksi => $items) {
-                $firstRow = $items->first();
-                
-                // Buat Customer (Default 'Umum' kalau kosong)
-                $namaCust = $firstRow['customer'] ?: 'Umum';
-                $customer = Customer::firstOrCreate(
-                    ['nama' => $namaCust],
-                    ['alamat' => '-', 'no_telp' => '-']
-                );
-
-                // Parsing Tanggal
-                try {
-                    $tgl = \Carbon\Carbon::parse($firstRow['tanggal']);
-                } catch (\Exception $e) {
-                    $tgl = now();
-                }
-
-                // Cek Produk
-                $grandTotal = 0;
-                $details = [];
-
-                foreach ($items as $item) {
-                    // Cari produk MIRIP (Case Insensitive)
-                    $produk = Produk::where('nama_produk', 'LIKE', '%' . $item['nama_produk'] . '%')->first();
-
-                    if ($produk) {
-                        $subtotal = $produk->harga_jual * $item['qty'];
-                        $grandTotal += $subtotal;
-                        
-                        $details[] = [
-                            'produk' => $produk,
-                            'qty' => $item['qty'],
-                            'harga_satuan' => $produk->harga_jual,
-                            'subtotal' => $subtotal
-                        ];
-                    } else {
-                        // Catat error kalau produk gak ketemu
-                        $errorLog[] = "Produk '" . $item['nama_produk'] . "' tidak ditemukan di database.";
-                    }
-                }
-
-                if ($grandTotal == 0) continue; // Skip struk kalau isinya kosong
-
-                // Simpan Header Penjualan (sesuai struktur tabel)
-                $penjualan = Penjualan::create([
-                    'tgl_penjualan' => $tgl,
-                    'total' => $grandTotal,
-                    'user_id' => Auth::id() ?? 1,
-                    'id_cust' => $customer->id_cust,
-                ]);
-
-                // Simpan Detail & Potong Stok
-                foreach ($details as $d) {
-                    DetailPenjualan::create([
-                        'id_penjualan' => $penjualan->id_penjualan,
-                        'id_produk' => $d['produk']->id_produk,
-                        'jumlah' => $d['qty'],
-                        'harga_satuan' => $d['harga_satuan'],
-                        'sub_total' => $d['subtotal']
-                    ]);
-                    
-                    $d['produk']->decrement('stok', $d['qty']);
-                }
-                $suksesCount++;
-            }
-
-            DB::commit();
-
-            // Cek apakah ada error produk
-            if (count($errorLog) > 0) {
-                // Tampilkan sukses TAPI ada catatan
-                $pesanError = implode(" | ", array_unique($errorLog));
-                return redirect()->route('penjualan.index')
-                    ->with('success', "$suksesCount Transaksi berhasil! TAPI ada produk skip: $pesanError");
-            }
-
-            return redirect()->route('penjualan.index')
-                ->with('success', "Sukses! $suksesCount Transaksi berhasil diimport.");
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Error Database: ' . $e->getMessage());
+            fclose($handle);
         }
     }
+
+    if (empty($data)) {
+        return back()->with('error', 'File kosong atau format salah.');
+    }
+
+    /* =======================
+     * 2. PROSES IMPORT
+     * ======================= */
+    DB::beginTransaction();
+    try {
+        $groups = collect($data)->groupBy('no_transaksi');
+        $sukses = 0;
+        $errorLog = [];
+
+        // Ambil semua produk SEKALI (biar kenceng)
+        $produkList = Produk::all();
+
+        foreach ($groups as $no_transaksi => $items) {
+
+            // Parse tanggal
+            try {
+                $tgl = \Carbon\Carbon::parse($items->first()['tanggal']);
+            } catch (\Exception $e) {
+                $tgl = now();
+            }
+
+            $details = [];
+            $grandTotal = 0;
+
+            foreach ($items as $item) {
+
+                if ($item['qty'] <= 0) {
+                    $errorLog[] = "Transaksi {$no_transaksi}: qty produk '{$item['nama_produk']}' tidak valid.";
+                    continue;
+                }
+
+                $namaExcel = $this->normalizeProduk($item['nama_produk']);
+
+                $produk = $produkList->first(function ($p) use ($namaExcel) {
+                    $db = $this->normalizeProduk($p->nama_produk);
+                    return $db === $namaExcel || str_contains($db, $namaExcel);
+                });
+
+                if (!$produk) {
+                    $errorLog[] = "Transaksi {$no_transaksi}: produk '{$item['nama_produk']}' tidak ditemukan.";
+                    continue;
+                }
+
+                if ($produk->stok < $item['qty']) {
+                    $errorLog[] = "Transaksi {$no_transaksi}: stok '{$produk->nama_produk}' kurang.";
+                    continue;
+                }
+
+                $subtotal = $produk->harga_jual * $item['qty'];
+                $grandTotal += $subtotal;
+
+                $details[] = [
+                    'produk' => $produk,
+                    'qty' => $item['qty'],
+                    'harga' => $produk->harga_jual,
+                    'subtotal' => $subtotal
+                ];
+            }
+
+            // ❌ Kalau tidak ada produk valid → skip TANPA bikin customer
+            if (count($details) === 0) {
+                $errorLog[] = "Transaksi {$no_transaksi}: tidak ada produk valid, transaksi di-skip.";
+                continue;
+            }
+
+            // ✅ Baru buat customer
+            $namaCust = $items->first()['customer'] ?: 'Umum';
+            $customer = Customer::firstOrCreate(
+                ['nama' => $namaCust],
+                ['alamat' => '-', 'no_telp' => '-']
+            );
+
+            // ✅ Simpan penjualan
+            $penjualan = Penjualan::create([
+                'tgl_penjualan' => $tgl,
+                'total' => $grandTotal,
+                'user_id' => Auth::id() ?? 1,
+                'id_cust' => $customer->id_cust,
+            ]);
+
+            // ✅ Simpan detail penjualan
+            foreach ($details as $d) {
+                DetailPenjualan::create([
+                    'id_penjualan' => $penjualan->id_penjualan,
+                    'id_produk' => $d['produk']->id_produk,
+                    'jumlah' => $d['qty'],
+                    'harga_satuan' => $d['harga'],
+                    'sub_total' => $d['subtotal'],
+                ]);
+
+                $d['produk']->decrement('stok', $d['qty']);
+            }
+
+            $sukses++;
+        }
+
+        DB::commit();
+
+        $pesan = "Import selesai: {$sukses} transaksi berhasil.";
+        if (!empty($errorLog)) {
+            $pesan .= " Catatan: " . implode(' | ', array_unique($errorLog));
+        }
+
+        return redirect()->route('penjualan.index')->with('success', $pesan);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Import gagal: ' . $e->getMessage());
+    }
+}
+
+    /* =======================
+    * HELPER NORMALISASI
+    * ======================= */
+    private function normalizeProduk($nama)
+    {
+        return strtolower(
+            preg_replace('/[^a-z0-9]/', '', $nama)
+        );
+    }
+
 }

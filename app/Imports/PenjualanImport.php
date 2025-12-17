@@ -29,18 +29,18 @@ class PenjualanImport implements ToCollection, WithHeadingRow
             
             // --- A. LOGIKA CUSTOMER (AUTO CREATE) ---
             $namaCust = trim($firstRow['customer'] ?? 'Umum');
-            $customer = Customer::where('nama_customer', 'LIKE', $namaCust)->first();
+            $customer = Customer::where('nama', 'LIKE', $namaCust)->first();
             
             if (!$customer) {
                 // Kalau gak ada, buat baru otomatis!
                 $customer = Customer::create([
-                    'nama_customer' => $namaCust,
+                    'nama' => $namaCust,
                     'alamat' => '-',
                     'no_telp' => '-'
                 ]);
                 Log::info("Customer baru dibuat: " . $namaCust);
             }
-            $id_customer = $customer->id_customer;
+            $id_customer = $customer->id_cust;
 
             // --- B. LOGIKA TANGGAL (AUTO DETECT) ---
             try {
