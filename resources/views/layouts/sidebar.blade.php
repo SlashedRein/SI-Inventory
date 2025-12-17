@@ -23,6 +23,10 @@
                 <i class="bi bi-cake2-fill"></i>
                 <span>Produk</span>
             </a>
+            <a href="{{ route('resep.index') }}" class="nav-link {{ request()->routeIs('resep.*') ? 'active' : '' }}" title="Resep">
+                <i class="bi bi-journal-text"></i>
+                <span>Resep</span>
+            </a>
             <a href="{{ route('supplier.index') }}" class="nav-link {{ request()->routeIs('supplier.*') ? 'active' : '' }}" title="Supplier">
                 <i class="bi bi-truck"></i>
                 <span>Supplier</span>

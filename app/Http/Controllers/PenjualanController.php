@@ -105,40 +105,62 @@ class PenjualanController extends Controller {
         ]);
 
         $file = $request->file('file_excel');
-        $path = $file->getRealPath();
+        $ext = strtolower($file->getClientOriginalExtension());
 
-        // 2. Deteksi Separator Otomatis
-        $handle = fopen($path, "r");
-        $firstLine = fgets($handle);
-        fclose($handle);
-        $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
-
-        // 3. Baca Data CSV
         $data = [];
-        $rowNumber = 0;
-        
-        if (($handle = fopen($path, "r")) !== false) {
-            while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
+
+        // Jika file Excel (.xls/.xlsx) -> pakai Maatwebsite Excel toArray
+        if (in_array($ext, ['xls', 'xlsx'])) {
+            $sheets = Excel::toArray([], $file);
+            $rows = count($sheets) > 0 ? $sheets[0] : [];
+            $rowNumber = 0;
+            foreach ($rows as $row) {
                 $rowNumber++;
-                
-                // SKIP jika baris kosong atau jumlah kolom kurang dari 5
-                if(count($row) < 5) continue; 
+                // Pastikan row ada minimal 5 kolom
+                if (!is_array($row) || count($row) < 5) continue;
 
-                // SKIP BARIS JUDUL (Kalau kolom pertama isinya "no_transaksi" atau "tanggal")
-                if ($rowNumber == 1 && (strtolower(trim($row[0])) == 'no_transaksi' || strtolower(trim($row[0])) == 'tanggal')) {
-                    continue;
-                }
+                // Skip header baris (jika berisi teks header umum)
+                $firstCell = strtolower(trim((string)($row[0] ?? '')));
+                if ($rowNumber == 1 && ($firstCell == 'no_transaksi' || $firstCell == 'tanggal')) continue;
 
-                // Masukkan ke array
                 $data[] = [
-                    'no_transaksi' => trim($row[0]),
-                    'tanggal'      => trim($row[1]),
-                    'customer'     => trim($row[2]),
-                    'nama_produk'  => trim($row[3]),
-                    'qty'          => (int) trim($row[4]),
+                    'no_transaksi' => trim((string)$row[0]),
+                    'tanggal'      => trim((string)$row[1]),
+                    'customer'     => trim((string)$row[2]),
+                    'nama_produk'  => trim((string)$row[3]),
+                    'qty'          => (int) ($row[4] ?? 0),
                 ];
             }
-            fclose($handle);
+        } else {
+            // Treat as CSV (detect delimiter robustly)
+            $path = $file->getRealPath();
+            $contents = file_get_contents($path);
+            // detect delimiter by checking common candidates
+            $delimiter = ',';
+            $candidates = [";", ",", "\t", '|'];
+            $firstLine = strtok($contents, "\n");
+            foreach ($candidates as $cand) {
+                if (substr_count($firstLine, $cand) >= 1) { $delimiter = $cand; break; }
+            }
+
+            if (($handle = fopen($path, 'r')) !== false) {
+                $rowNumber = 0;
+                while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
+                    $rowNumber++;
+                    if (count($row) < 5) continue;
+                    $firstCell = strtolower(trim((string)($row[0] ?? '')));
+                    if ($rowNumber == 1 && ($firstCell == 'no_transaksi' || $firstCell == 'tanggal')) continue;
+
+                    $data[] = [
+                        'no_transaksi' => trim($row[0]),
+                        'tanggal'      => trim($row[1]),
+                        'customer'     => trim($row[2]),
+                        'nama_produk'  => trim($row[3]),
+                        'qty'          => (int) trim($row[4]),
+                    ];
+                }
+                fclose($handle);
+            }
         }
 
         if (empty($data)) {

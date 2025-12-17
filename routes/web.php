@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::get('produk-stok-minim', [ProdukController::class, 'stokMinim'])->name('produk.stok-minim');
 
     // === RESEP (Khusus) ===
+    Route::get('resep', [ResepController::class, 'index'])->name('resep.index');
     Route::get('produk/{id}/resep', [ResepController::class, 'edit'])->name('resep.edit');
     Route::post('produk/{id}/resep', [ResepController::class, 'store'])->name('resep.store');
     Route::delete('resep/{id}', [ResepController::class, 'destroy'])->name('resep.destroy');

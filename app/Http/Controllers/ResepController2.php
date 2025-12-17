@@ -8,7 +8,7 @@ use App\Models\BahanBaku;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ResepController extends Controller
+class ResepController2 extends Controller
 {
     // Tampilkan daftar resep (semua produk dengan resepnya)
     public function index()
