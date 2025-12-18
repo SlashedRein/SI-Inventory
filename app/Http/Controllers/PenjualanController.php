@@ -20,6 +20,57 @@ class PenjualanController extends Controller {
         $produks = Produk::where('stok', '>', 0)->get();
         return view('penjualan.create', compact('customers', 'produks'));
     }
+
+    public function edit($id)
+    {
+        $penjualan = Penjualan::with(['detail.produk', 'customer'])
+            ->findOrFail($id);
+
+        $customers = Customer::all();
+        $produks   = Produk::all();
+
+        return view('penjualan.edit', compact(
+            'penjualan',
+            'customers',
+            'produks'
+        ));
+    }
+
+    public function destroy($id)
+    {
+        try {
+            DB::transaction(function () use ($id) {
+
+                $penjualan = Penjualan::with('detail.produk')
+                    ->findOrFail($id);
+
+                // 1. Kembalikan stok produk
+                foreach ($penjualan->detail as $detail) {
+                    if ($detail->produk) {
+                        $detail->produk->increment('stok', $detail->jumlah);
+                    }
+                }
+
+                // 2. Hapus detail penjualan
+                DetailPenjualan::where('id_penjualan', $penjualan->id_penjualan)->delete();
+
+                // 3. Hapus header penjualan
+                $penjualan->delete();
+            });
+
+            return redirect()
+                ->route('penjualan.index')
+                ->with('success', 'Transaksi penjualan berhasil dihapus & stok dikembalikan.');
+
+        } catch (\Exception $e) {
+            return back()->with(
+                'error',
+                'Gagal menghapus transaksi: ' . $e->getMessage()
+            );
+        }
+    }
+
+
     public function store(Request $request) {
         $request->validate([
             'id_cust' => 'required|exists:customers,id_cust',

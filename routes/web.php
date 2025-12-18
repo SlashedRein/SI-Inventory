@@ -45,10 +45,18 @@ Route::middleware('auth')->group(function () {
     Route::get('produk/{id}/resep', [ResepController::class, 'edit'])->name('resep.edit');
     Route::post('produk/{id}/resep', [ResepController::class, 'store'])->name('resep.store');
     Route::delete('resep/{id}', [ResepController::class, 'destroy'])->name('resep.destroy');
+    Route::get('/resep/{id_produk}/estimasi', [ResepController::class, 'showEstimasi'])
+    ->name('resep.estimasi');
+
 
     // === TRANSAKSI ===
     Route::resource('pembelian', PembelianController::class);
     Route::resource('penjualan', PenjualanController::class);
+    Route::get('/penjualan/{id}/edit', [PenjualanController::class, 'edit'])
+    ->name('penjualan.edit');
+    Route::delete('/penjualan/{id}', [PenjualanController::class, 'destroy'])
+    ->name('penjualan.destroy');
+
     // Print/Print-friendly view for a single penjualan (opens in new tab)
     Route::get('/penjualan/{id}/print', [PenjualanController::class, 'print'])->name('penjualan.print');
     Route::get('/pembelian/{id}/print', [PembelianController::class, 'print'])->name('pembelian.print');

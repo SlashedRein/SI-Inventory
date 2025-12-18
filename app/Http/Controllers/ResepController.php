@@ -53,6 +53,45 @@ class ResepController extends Controller
         return back()->with('success', 'Bahan ditambahkan');
     }
 
+    // Lihat detail resep + estimasi produksi
+    public function showEstimasi($id_produk)
+    {
+        $produk = Produk::with('resep.bahan')->findOrFail($id_produk);
+
+        $estimasi = null;
+        $detailEstimasi = [];
+
+        foreach ($produk->resep as $r) {
+            $stokBahan = $r->bahan->stok;       // stok base unit (gram/ml/pcs)
+            $takaran   = $r->takaran;            // kebutuhan per 1 produk
+
+            if ($takaran <= 0) {
+                continue;
+            }
+
+            $bisaProduksi = intdiv($stokBahan, $takaran);
+
+            $detailEstimasi[] = [
+                'nama_bahan' => $r->bahan->nama_bahan,
+                'stok' => $stokBahan,
+                'takaran' => $takaran,
+                'satuan' => $r->satuan,
+                'maks_produk' => $bisaProduksi
+            ];
+
+            if ($estimasi === null || $bisaProduksi < $estimasi) {
+                $estimasi = $bisaProduksi;
+            }
+        }
+
+        return view('resep.estimasi', compact(
+            'produk',
+            'estimasi',
+            'detailEstimasi'
+        ));
+    }
+
+
     // Hapus bahan resep (hanya owner)
     public function destroy($id)
     {

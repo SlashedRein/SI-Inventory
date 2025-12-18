@@ -2,267 +2,247 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PO-{{ str_pad($pembelian->id_beli, 5, '0', STR_PAD_LEFT) }}</title>
+    <title>Invoice Pembelian #{{ $pembelian->id_beli }}</title>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-        .container {
-            background-color: white;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 3px solid #0d6efd;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        .header h1 { font-size: 28px; color: #0d6efd; margin-bottom: 5px; }
-        .header p { color: #666; font-size: 14px; }
-        .header .po-number {
-            font-size: 18px;
-            font-weight: bold;
-            color: #0d6efd;
-            margin-top: 10px;
-        }
-        
-        .info-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 30px;
-        }
-        .info-block h3 { font-size: 12px; text-transform: uppercase; color: #999; margin-bottom: 8px; font-weight: 600; }
-        .info-block p { font-size: 16px; color: #333; margin-bottom: 5px; }
-        .info-block .label { font-size: 13px; color: #666; }
-        
-        .items-section {
-            margin-bottom: 30px;
-        }
-        .items-section h3 { font-size: 12px; text-transform: uppercase; color: #999; margin-bottom: 15px; font-weight: 600; }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table thead { background-color: #f8f9fa; }
-        table th {
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
+            font-family: Arial, sans-serif;
             font-size: 12px;
-            color: #555;
-            text-transform: uppercase;
-            border-bottom: 2px solid #dee2e6;
-        }
-        table td {
-            padding: 12px;
-            border-bottom: 1px solid #dee2e6;
-            font-size: 14px;
-            color: #333;
-        }
-        table tbody tr:last-child td { border-bottom: 2px solid #dee2e6; }
-        
-        th.text-center, td.text-center { text-align: center; }
-        th.text-right, td.text-right { text-align: right; }
-        
-        .quantity { font-weight: 600; color: #0d6efd; }
-        .price { font-weight: 600; color: #333; }
-        .total-row td { font-weight: bold; background-color: #f8f9fa; }
-        .total-amount { font-size: 18px; color: #0d6efd; }
-        
-        .summary {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 40px;
-        }
-        .summary-box {
-            width: 300px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
+            color: #000;
+            margin: 0;
             padding: 20px;
+            background: #f0f0f0;
         }
-        .summary-row {
+
+        .invoice-box {
+            background: #fff;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 10mm;
+            min-height: 297mm;
+            box-shadow: 0 0 10px rgba(0,0,0,.15);
+        }
+
+        .header-container {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 14px;
+            margin-bottom: 20px;
         }
-        .summary-row.total {
+
+        .header-left h2 {
+            margin: 0;
             font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .header-left p {
+            margin: 2px 0;
+        }
+
+        .header-right-box {
+            border: 1px solid #000;
+            width: 300px;
+        }
+
+        .box-row {
+            display: flex;
+            border-bottom: 1px solid #000;
+        }
+
+        .box-row:last-child {
+            border-bottom: none;
+        }
+
+        .box-col {
+            flex: 1;
+            padding: 5px;
+            text-align: center;
+            border-right: 1px solid #000;
             font-weight: bold;
-            color: #0d6efd;
-            border-top: 2px solid #dee2e6;
-            padding-top: 10px;
-            margin-top: 10px;
+            font-size: 11px;
         }
-        
-        .footer {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 50px;
-            padding-top: 40px;
-            border-top: 1px solid #dee2e6;
-            font-size: 12px;
+
+        .box-col:last-child {
+            border-right: none;
+        }
+
+        .box-val {
+            font-weight: normal;
+        }
+
+        .to-section {
+            margin-bottom: 20px;
+        }
+
+        table.main-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin-bottom: 10px;
+        }
+
+        table.main-table th,
+        table.main-table td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        table.main-table th {
+            background: #e0e0e0;
+            font-size: 11px;
             text-align: center;
         }
-        .signature-block { }
-        .signature-block .line { border-top: 1px solid #333; margin-top: 50px; margin-bottom: 10px; }
-        .signature-block .name { font-weight: 600; }
-        
-        .notes {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #856404;
-        }
-        .notes strong { color: #333; }
-        
-        @media print {
-            body { background-color: white; padding: 0; }
-            .container { box-shadow: none; border-radius: 0; }
-            .btn-print { display: none; }
-        }
-        
-        .btn-print {
-            display: block;
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            background-color: #0d6efd;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+
+        .footer-total {
+            text-align: right;
+            font-weight: bold;
             font-size: 14px;
-            text-align: center;
-            text-decoration: none;
+            margin-bottom: 30px;
         }
-        .btn-print:hover { background-color: #0b5ed7; }
-        
-        .deleted-item { color: #999; font-style: italic; }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .sig-box { width: 30%; }
+        .sig-space { height: 80px; }
+        .sig-line {
+            border-top: 1px dotted #000;
+            margin-top: 5px;
+            width: 80%;
+            display: inline-block;
+        }
+
+        .disclaimer {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .bank-info {
+            margin-top: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .invoice-box { box-shadow: none; padding: 0; }
+            .no-print { display: none; }
+        }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <button class="btn-print" onclick="window.print();">🖨️ Cetak / Print</button>
-        
-        <div class="header">
-            <h1>PURCHASE ORDER</h1>
-            <p>Pesanan Pembelian Bahan Baku</p>
-            <div class="po-number">
-                PO-{{ str_pad($pembelian->id_beli, 5, '0', STR_PAD_LEFT) }}
-            </div>
+
+<div class="invoice-box">
+
+    {{-- HEADER --}}
+    <div class="header-container">
+        <div class="header-left">
+            <h2>{{ strtoupper($pembelian->supplier->nama_supplier ?? '-') }}</h2>
+            <p>Supplier Bahan</p>
+            <p>{{ $pembelian->supplier->alamat ?? '-' }}</p>
+            <p>Wa. {{ $pembelian->supplier->no_telp ?? '-' }}</p>
         </div>
-        
-        <div class="info-section">
-            <div class="info-block">
-                <h3>📅 Tanggal PO</h3>
-                <p>{{ date('d Maret Y', strtotime($pembelian->tgl)) }}</p>
-                <p class="label">{{ date('H:i', strtotime($pembelian->created_at ?? now())) }}</p>
+
+        <div class="header-right-box">
+            <div class="box-row">
+                <div class="box-col">DATE</div>
+                <div class="box-col">DUE</div>
+                <div class="box-col">TOP</div>
             </div>
-            <div class="info-block">
-                <h3>👤 Petugas Pemesan</h3>
-                <p>{{ $pembelian->user->name ?? 'Admin' }}</p>
-            </div>
-        </div>
-        
-        <div class="info-section">
-            <div class="info-block">
-                <h3>🏪 Supplier</h3>
-                <p>{{ optional($pembelian->supplier)->nama_supplier ?? 'N/A' }}</p>
-                <p class="label">{{ optional($pembelian->supplier)->alamat ?? '-' }}</p>
-            </div>
-        </div>
-        
-        <div class="items-section">
-            <h3>📦 Daftar Bahan Baku</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nama Bahan Baku</th>
-                        <th class="text-center">Jumlah</th>
-                        <th class="text-center">Satuan</th>
-                        <th class="text-right">Harga Satuan</th>
-                        <th class="text-right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if($pembelian->detail && count($pembelian->detail) > 0)
-                        @foreach($pembelian->detail as $item)
-                        <tr>
-                            <td>
-                                @if($item->bahan && $item->bahan->nama_bahan)
-                                    {{ $item->bahan->nama_bahan }}
-                                @else
-                                    <span class="deleted-item">[Bahan Dihapus]</span>
-                                @endif
-                            </td>
-                            <td class="text-center quantity">{{ $item->jumlah }}</td>
-                            <td class="text-center">
-                                @if($item->bahan && $item->bahan->satuan)
-                                    {{ $item->bahan->satuan }}
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td class="text-right price">Rp {{ number_format($item->harga_satuan ?? 0, 0, ',', '.') }}</td>
-                            <td class="text-right price">Rp {{ number_format($item->sub_total ?? 0, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    @else
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #999;">Tidak ada item</td>
-                        </tr>
-                    @endif
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="summary">
-            <div class="summary-box">
-                <div class="summary-row">
-                    <span>Subtotal:</span>
-                    <span>Rp {{ number_format($pembelian->total_beli ?? 0, 0, ',', '.') }}</span>
-                </div>
-                <div class="summary-row">
-                    <span>PPN (0%):</span>
-                    <span>Rp 0</span>
-                </div>
-                <div class="summary-row total">
-                    <span>Total Pembelian:</span>
-                    <span>Rp {{ number_format($pembelian->total_beli ?? 0, 0, ',', '.') }}</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <div class="signature-block">
-                <strong>Dibuat oleh</strong>
-                <div class="line"></div>
-                <div class="name">{{ $pembelian->user->name ?? 'Admin' }}</div>
-                <div style="font-size: 11px; color: #999;">{{ date('d M Y', strtotime($pembelian->created_at ?? now())) }}</div>
-            </div>
-            <div class="signature-block">
-                <strong>Disetujui oleh</strong>
-                <div class="line"></div>
-                <div class="name">_______________</div>
-                <div style="font-size: 11px; color: #999;">Tanda Tangan</div>
+            <div class="box-row">
+                <div class="box-col box-val">{{ \Carbon\Carbon::parse($pembelian->tgl)->format('d M Y') }}</div>
+                <div class="box-col box-val">{{ \Carbon\Carbon::parse($pembelian->tgl)->format('d M Y') }}</div>
+                <div class="box-col box-val">0 Days</div>
             </div>
         </div>
     </div>
+
+    {{-- TO --}}
+    <div class="to-section">
+        <strong>DEWI COOKIES (Cikarang)</strong><br>
+        Perum Telaga Murni Jl. Mangga 2 Blok C8 No.18<br>
+        0812 9631 5967
+    </div>
+
+    {{-- TABLE --}}
+    <table class="main-table">
+        <thead>
+            <tr>
+                <th width="5%">NO</th>
+                <th width="45%" class="text-left">NAME</th>
+                <th width="10%">QTY</th>
+                <th width="20%" class="text-right">PRICE (RP)</th>
+                <th width="20%" class="text-right">TOTAL (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $no = 1; $grandQty = 0; @endphp
+            @foreach($pembelian->detail as $d)
+                @php $grandQty += $d->jumlah; @endphp
+                <tr>
+                    <td class="text-center">{{ $no++ }}</td>
+                    <td>{{ $d->bahan->nama_bahan ?? 'Bahan Dihapus' }}</td>
+                    <td class="text-center">{{ $d->jumlah }}</td>
+                    <td class="text-right">{{ number_format($d->harga_satuan,0,',','.') }}</td>
+                    <td class="text-right">{{ number_format($d->sub_total,0,',','.') }}</td>
+                </tr>
+            @endforeach
+
+            @for($i=0;$i<3;$i++)
+            <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>
+            @endfor
+        </tbody>
+    </table>
+
+    <div class="footer-total">
+        Total Qty : {{ $grandQty }} |
+        Amount : Rp {{ number_format($pembelian->total_beli,0,',','.') }}
+    </div>
+
+    <div class="signature-section">
+        <div class="sig-box">
+            Penerima<br><div class="sig-space"></div><div class="sig-line"></div>
+        </div>
+        <div class="sig-box">
+            Pengemudi<br><div class="sig-space"></div><div class="sig-line"></div>
+        </div>
+        <div class="sig-box">
+            Mengetahui<br><div class="sig-space"></div><div class="sig-line"></div>
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        Periksa kembali barang anda.<br>
+        Barang yang sudah dibeli tidak dapat dikembalikan.
+    </div>
+
+    <div class="bank-info">
+        NO REKENING {{ strtoupper($pembelian->supplier->nama_supplier ?? '-') }}<br>
+        ATAS NAMA : {{ $pembelian->supplier->nama_supplier ?? '-' }}<br>
+        NO REKENING : {{ $pembelian->supplier->no_rek ?? '-' }}
+    </div>
+
+    <div style="font-size:10px;margin-top:10px;font-style:italic">
+        Print by system at {{ now()->format('d M Y H:i') }}
+    </div>
+
+</div>
+
+<div class="no-print" style="position:fixed;top:20px;right:20px">
+    <button onclick="window.print()">🖨️ Cetak</button>
+    <button onclick="window.close()">Tutup</button>
+</div>
+
 </body>
 </html>
