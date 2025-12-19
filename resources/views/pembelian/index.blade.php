@@ -11,8 +11,10 @@
     tbody tr:nth-child(2) { animation-delay: 0.15s; }
     tbody tr:nth-child(3) { animation-delay: 0.2s; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .card-custom { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: none; }
 </style>
 
+{{-- STATISTIC CARDS --}}
 <div class="row g-4 mb-4 fade-in-up">
     <div class="col-md-4">
         <div class="card-custom p-3 d-flex align-items-center gap-3">
@@ -33,9 +35,7 @@
             </div>
             <div>
                 <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Pembelian Hari Ini</h6>
-                <h4 class="fw-bold mb-0">
-                    {{ $pembelians->where('tgl', date('Y-m-d'))->count() }} PO
-                </h4>
+                <h4 class="fw-bold mb-0">{{ $pembelians->where('tgl', date('Y-m-d'))->count() }} PO</h4>
             </div>
         </div>
     </div>
@@ -68,8 +68,7 @@
             </div>
 
             @if(Auth::user()->role == 'owner')
-            <button class="btn btn-success d-flex align-items-center gap-2 rounded-3 shadow-sm px-3" 
-                    data-bs-toggle="modal" data-bs-target="#modalImport">
+            <button class="btn btn-success d-flex align-items-center gap-2 rounded-3 shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalImport">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
                 <span class="d-none d-md-inline">Import Excel</span>
             </button>
@@ -99,9 +98,7 @@
                 <tr class="border-bottom-0">
                     <td class="ps-3 fw-bold text-primary">#PO-{{ str_pad($item->id_beli, 5, '0', STR_PAD_LEFT) }}</td>
                     <td class="text-muted">{{ date('d M Y', strtotime($item->tgl)) }}</td>
-                    <td class="fw-bold text-dark">
-                        {{ optional($item->supplier)->nama_supplier ?? 'N/A' }}
-                    </td>
+                    <td class="fw-bold text-dark">{{ optional($item->supplier)->nama_supplier ?? 'N/A' }}</td>
                     <td class="text-danger fw-bold">Rp {{ number_format($item->total_beli, 0, ',', '.') }}</td>
                     <td>
                         <span class="badge bg-light text-secondary border">
@@ -110,14 +107,21 @@
                     </td>
                     <td class="text-end pe-3">
                         <div class="d-flex justify-content-end gap-2">
+                            {{-- BUTTON DETAIL --}}
                             <button type="button" class="btn btn-sm btn-light text-info border rounded-2 btn-view-detail"
                                     data-id="{{ $item->id_beli }}"
-                                    data-supplier='@json($item->supplier->nama_supplier ?? "N/A")'
+                                    data-supplier="{{ optional($item->supplier)->nama_supplier ?? 'N/A' }}"
                                     data-details='@json($item->detail)'
-                                    title="Lihat Detail Bahan">
+                                    title="Lihat Detail">
                                 <i class="bi bi-eye"></i>
                             </button>
 
+                            {{-- BUTTON EDIT --}}
+                            <a href="{{ route('pembelian.edit', $item->id_beli) }}" class="btn btn-sm btn-light text-warning border rounded-2" title="Edit Transaksi">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            {{-- BUTTON HAPUS --}}
                             @if(Auth::user()->role == 'owner')
                             <form action="{{ route('pembelian.destroy', $item->id_beli) }}" method="POST" class="d-inline delete-form">
                                 @csrf
@@ -143,6 +147,7 @@
     </div>
 </div>
 
+{{-- MODAL IMPORT --}}
 <div class="modal fade" id="modalImport" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -155,16 +160,11 @@
                 <div class="modal-body pt-4">
                     <div class="alert alert-info border-0 small rounded-3 mb-3">
                         <i class="bi bi-info-circle me-1"></i>
-                        Pastikan format Excel sesuai template. Data yang diimport akan otomatis menambah stok bahan baku.
+                        Data yang diimport akan otomatis menambah stok bahan baku.
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-uppercase text-muted">File Excel (.xlsx / .csv)</label>
                         <input type="file" name="file_excel" class="form-control form-control-lg rounded-3" accept=".xlsx, .xls, .csv" required>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="#" class="text-decoration-none small text-success fw-bold"><i class="bi bi-download me-1"></i> Download Template</a>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 pe-4">
@@ -176,6 +176,7 @@
     </div>
 </div>
 
+{{-- MODAL DETAIL --}}
 <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -196,8 +197,7 @@
                                 <th class="pe-4 py-3 text-end">Subtotal</th>
                             </tr>
                         </thead>
-                        <tbody id="detailList">
-                            </tbody>
+                        <tbody id="detailList"></tbody>
                     </table>
                 </div>
             </div>
@@ -211,77 +211,62 @@
 
 @push('scripts')
 <script>
-    // Search Table
+    // Search Function
     document.getElementById('searchInput').addEventListener('keyup', function() {
         let searchText = this.value.toLowerCase();
         let rows = document.querySelectorAll('#tablePembelian tbody tr');
         rows.forEach(row => {
-            let text = row.innerText.toLowerCase();
-            row.style.display = text.includes(searchText) ? '' : 'none';
+            row.style.display = row.innerText.toLowerCase().includes(searchText) ? '' : 'none';
         });
     });
 
-    // Attach click handler to view buttons (use data-attributes to safely carry JSON)
+    // Detail Logic
     document.querySelectorAll('.btn-view-detail').forEach(btn => {
         btn.addEventListener('click', function () {
-            const id = this.dataset.id;
-            let supplier = 'N/A';
-            try { supplier = this.dataset.supplier ? JSON.parse(this.dataset.supplier) : 'N/A'; } catch (e) { supplier = this.dataset.supplier || 'N/A'; }
+            const id = this.getAttribute('data-id');
+            const supplier = this.getAttribute('data-supplier');
             let details = [];
-            try { details = this.dataset.details ? JSON.parse(this.dataset.details) : []; } catch (e) { details = []; }
-            showDetail(id, supplier, details);
-        });
-    });
+            try { details = JSON.parse(this.getAttribute('data-details')); } catch (e) { details = []; }
+            
+            document.getElementById('detailId').innerText = "#PO-" + String(id).padStart(5, '0');
+            document.getElementById('detailSupplier').innerText = "Supplier: " + supplier;
 
-    // Show Detail Modal
-    function showDetail(id, supplier, details) {
-        document.getElementById('detailId').innerText = "#PO-" + String(id).padStart(5, '0');
-        document.getElementById('detailSupplier').innerText = "Supplier: " + supplier;
-
-        let list = document.getElementById('detailList');
-        list.innerHTML = '';
-
-        if(details && details.length > 0) {
+            let list = document.getElementById('detailList');
+            list.innerHTML = '';
             details.forEach(item => {
                 let namaBahan = (item.bahan && item.bahan.nama_bahan) ? item.bahan.nama_bahan : 'Bahan Dihapus';
-                // sub_total is used in DB; fallback to 0 if missing
-                let rawSubtotal = Number(item.sub_total ?? item.subtotal ?? 0);
-                if (Number.isNaN(rawSubtotal)) rawSubtotal = 0;
-                let subtotal = new Intl.NumberFormat('id-ID').format(rawSubtotal);
-
-                let row = `
+                let subtotal = new Intl.NumberFormat('id-ID').format(item.sub_total || item.subtotal || 0);
+                list.innerHTML += `
                     <tr>
                         <td class="ps-4 fw-bold text-dark">${namaBahan}</td>
                         <td class="text-center">${item.jumlah}</td>
                         <td class="pe-4 text-end text-danger fw-bold">Rp ${subtotal}</td>
-                    </tr>
-                `;
-                list.innerHTML += row;
+                    </tr>`;
             });
-        } else {
-            list.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">Tidak ada detail item.</td></tr>';
-        }
 
-        // Set print button to open print-friendly route in new tab
-        const modalPrintBtn = document.getElementById('modalPrintBtn');
-        if(modalPrintBtn){
-            modalPrintBtn.onclick = function(){
-                const url = "{{ url('/pembelian') }}/" + id + "/print";
-                window.open(url, '_blank');
+            document.getElementById('modalPrintBtn').onclick = () => {
+                window.open("{{ url('/pembelian') }}/" + id + "/print", '_blank');
             };
-        }
 
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('modalDetail'));
-        modal.show();
-    }
+            new bootstrap.Modal(document.getElementById('modalDetail')).show();
+        });
+    });
 
-    // Delete form confirmation
+    // Delete Confirmation (SweetAlert)
     document.querySelectorAll('.delete-form').forEach(form => {
         form.addEventListener('submit', function(e) {
-            if(!confirm('Yakin ingin menghapus pembelian ini? Stok bahan akan dikembalikan.')) {
-                e.preventDefault();
-            }
+            e.preventDefault();
+            Swal.fire({
+                title: 'Hapus Pembelian?',
+                text: "Stok akan dikurangi kembali dan data tidak bisa dipulihkan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) this.submit();
+            });
         });
     });
 </script>
