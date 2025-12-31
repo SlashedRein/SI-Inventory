@@ -1,59 +1,101 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SI-Inventory
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+SI-Inventory adalah **sistem informasi inventaris berbasis web** yang dikembangkan untuk membantu klien dalam mengelola data barang dan stok secara terstruktur, dengan penerapan **Role-Based Access Control (RBAC)** antara **Owner** dan **Karyawan**.
 
-## About Laravel
+Sistem ini dikembangkan sebagai **client-based project** dan dirancang agar dapat dikembangkan lebih lanjut hingga tahap deployment produksi sesuai kebutuhan operasional klien.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Latar Belakang
+Pada banyak organisasi atau usaha skala kecil hingga menengah, proses pengelolaan inventaris masih dilakukan secara manual atau menggunakan pencatatan sederhana. Hal ini sering menyebabkan:
+- Ketidaksesuaian antara stok fisik dan data sistem
+- Sulitnya menelusuri histori transaksi barang
+- Tidak adanya pembatasan hak akses antar pengguna
+- Risiko kesalahan input data oleh pihak yang tidak berwenang
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+SI-Inventory hadir sebagai solusi untuk mendigitalisasi proses inventaris sekaligus menerapkan kontrol akses berbasis peran pengguna.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Tujuan Pengembangan
+Tujuan dari pengembangan sistem ini adalah:
+- Menyediakan sistem inventaris berbasis web yang terstruktur
+- Menerapkan kontrol akses pengguna berbasis peran (RBAC)
+- Memisahkan kewenangan antara owner dan karyawan
+- Mendukung pencatatan transaksi barang masuk dan keluar
+- Menjadi fondasi sistem yang dapat dikembangkan dan diintegrasikan dengan modul lain (ERP)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Konteks Pengembangan (Client-Based)
+SI-Inventory dikembangkan berdasarkan kebutuhan awal klien sebagai sistem pencatatan inventaris. Saat ini sistem masih berada pada tahap **pengembangan dan validasi fitur**, dan direncanakan untuk dilakukan pengembangan lanjutan serta proses deployment setelah dilakukan konsultasi berikutnya dengan klien.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Pengembangan sistem dilakukan secara bertahap agar dapat menyesuaikan kebutuhan operasional dan kesiapan pengguna.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Role & Hak Akses Pengguna
+Sistem ini menerapkan **Role-Based Access Control (RBAC)** dengan pembagian peran sebagai berikut:
 
-## Contributing
+### 🔹 Owner
+Owner memiliki hak akses penuh terhadap sistem, antara lain:
+- Mengelola data barang
+- Melihat dan mengelola seluruh transaksi
+- Monitoring stok secara keseluruhan
+- Mengelola akun pengguna
+- Akses terhadap data laporan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 🔹 Karyawan
+Karyawan memiliki hak akses terbatas, antara lain:
+- Melihat data barang
+- Melakukan pencatatan transaksi barang masuk dan keluar
+- Tidak memiliki akses terhadap pengaturan sistem dan manajemen pengguna
 
-## Code of Conduct
+Pembagian hak akses ini bertujuan untuk menjaga keamanan data dan meminimalkan kesalahan operasional.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## Fitur Utama
+Fitur-fitur utama yang tersedia dalam sistem ini meliputi:
+- Manajemen data barang
+- Pencatatan stok barang
+- Pencatatan transaksi barang masuk dan keluar
+- Autentikasi pengguna
+- Kontrol akses berbasis peran (RBAC)
+- Penyajian data inventaris secara terstruktur
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## Teknologi yang Digunakan
+Sistem ini dikembangkan menggunakan teknologi berikut:
+- **Laravel** – Framework backend PHP
+- **PHP** – Bahasa pemrograman server-side
+- **MySQL** – Database relasional
+- **Blade Template** – Antarmuka pengguna
+- **Bootstrap / Tailwind CSS** – Styling antarmuka
+- **Git & GitHub** – Version control dan kolaborasi
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Gambaran Alur Sistem
+Pengguna melakukan login ke sistem sesuai perannya. Owner dan karyawan akan mendapatkan hak akses dan fitur yang berbeda. Setiap transaksi barang masuk dan keluar akan memengaruhi jumlah stok di dalam sistem secara terpusat dan tercatat.
+
+---
+
+## Potensi Pengembangan Lanjutan
+Sistem ini masih dapat dikembangkan lebih lanjut, antara lain:
+- Penambahan modul laporan dan analisis inventaris
+- Notifikasi stok minimum
+- Pengembangan dashboard monitoring
+- Integrasi dengan sistem ERP atau modul produksi
+- Pengembangan API untuk integrasi eksternal
+
+---
+
+## Status Project
+🟡 **In Development – Client-Based Project**
+
+Sistem ini dikembangkan untuk klien dan masih dalam tahap pengembangan serta evaluasi. Pengembangan lanjutan dan proses deployment akan dilakukan setelah konsultasi berikutnya dengan klien.
+
+Berikut adalah beberapa tampilan utama dari sistem SI-Inventory:
+
