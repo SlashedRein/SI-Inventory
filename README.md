@@ -66,6 +66,21 @@ Fitur-fitur utama yang tersedia dalam sistem ini meliputi:
 
 ---
 
+## Screenshot Sistem
+
+Berikut adalah beberapa tampilan utama dari sistem SI-Inventory:
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Data Barang
+![Data Barang](docs/screenshots/data-barang.png)
+
+### Transaksi Barang
+![Transaksi Barang](docs/screenshots/transaksi.png)
+
+---
+
 ## Teknologi yang Digunakan
 Sistem ini dikembangkan menggunakan teknologi berikut:
 - **Laravel** – Framework backend PHP
@@ -97,5 +112,5 @@ Sistem ini masih dapat dikembangkan lebih lanjut, antara lain:
 
 Sistem ini dikembangkan untuk klien dan masih dalam tahap pengembangan serta evaluasi. Pengembangan lanjutan dan proses deployment akan dilakukan setelah konsultasi berikutnya dengan klien.
 
-Berikut adalah beberapa tampilan utama dari sistem SI-Inventory:
+
 
