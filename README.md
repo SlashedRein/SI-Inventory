@@ -71,13 +71,13 @@ Fitur-fitur utama yang tersedia dalam sistem ini meliputi:
 Berikut adalah beberapa tampilan utama dari sistem SI-Inventory:
 
 ### Index
-![Dashboard ](docs/screenshots/index.png)
+![Dashboard ](docs/screenshots/index.jpeg)
 
 ### Login
-![Data Barang](docs/screenshots/Login.png)
+![Data Barang](docs/screenshots/Login.jpeg)
 
 ### Dashboard 
-![Transaksi Barang](docs/screenshots/dashboard_owner.png)
+![Transaksi Barang](docs/screenshots/dashboard_owner.jpeg)
 
 ---
 
